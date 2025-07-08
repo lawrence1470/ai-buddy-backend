@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import logging
 from datetime import datetime, timezone
+from services.database_service import database_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -757,7 +758,6 @@ def process_session():
         processing_time = int((time.time() - start_time) * 1000)
         
         # Save session data with AI summaries to database
-        from services.database_service import database_service
         
         session_data = {
             'user_id': user_id,
@@ -831,7 +831,6 @@ def get_personality_insights(user_id):
 @app.route('/sessions/<session_id>', methods=['GET'])
 def get_session_details(session_id):
     """Get session details with AI summary"""
-    from services.database_service import database_service
     
     session_data = database_service.get_session_with_summary(session_id)
     
@@ -843,8 +842,6 @@ def get_session_details(session_id):
 @app.route('/sessions/user/<user_id>', methods=['GET'])
 def get_user_sessions(user_id):
     """Get user's sessions with summaries"""
-    from services.database_service import database_service
-    from flask import request
     
     limit = request.args.get('limit', 10, type=int)
     sessions = database_service.get_user_sessions_with_summaries(user_id, limit)
@@ -1610,8 +1607,6 @@ def select_ai_buddy(user_id):
         return jsonify({'error': f'Invalid buddy_id. Valid options: {valid_buddies}'}), 400
     
     try:
-        from services.database_service import database_service
-        
         # Select buddy for user
         success = database_service.select_buddy(user_id, buddy_id.lower())
         
@@ -1641,8 +1636,6 @@ def select_ai_buddy(user_id):
 def get_selected_buddy(user_id):
     """Get user's selected AI buddy"""
     try:
-        from services.database_service import database_service
-        
         # Get user data
         user = database_service.get_user_with_buddy(user_id)
         
