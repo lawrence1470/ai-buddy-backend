@@ -1,0 +1,14 @@
+# Supabase Configuration (Required - no SQLite fallback)
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_KEY=your_supabase_anon_key_here
+SUPABASE_SERVICE_KEY=your_supabase_service_key_here
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Redis Configuration (Optional - defaults to localhost)
+REDIS_URL=redis://localhost:6379/0
+
+# Security Keys (Change these in production!)
+SECRET_KEY=your_secret_key_here
+JWT_SECRET_KEY=your_jwt_secret_key_here 
