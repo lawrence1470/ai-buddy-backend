@@ -134,11 +134,11 @@ def test_memory_service():
         stats_result = memory_service.get_memory_stats(test_user_id)
         
         if stats_result.get('success'):
-            supabase_count = stats_result.get('supabase_message_count', 0)
+            database_count = stats_result.get('supabase_message_count', 0)
             chroma_count = stats_result.get('chroma_embedding_count', 0)
             storage_sync = stats_result.get('storage_sync', False)
             
-            print(f"   📊 Supabase messages: {supabase_count}")
+            print(f"   📊 Database messages: {database_count}")
             print(f"   🧠 ChromaDB embeddings: {chroma_count}")
             print(f"   🔄 Storage sync: {'✅ Synced' if storage_sync else '❌ Out of sync'}")
         else:
