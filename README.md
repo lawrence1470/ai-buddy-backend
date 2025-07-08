@@ -10,7 +10,7 @@ This backend system analyzes conversation transcripts to build detailed MBTI per
 - **Session Management**: Automatic session tracking and transcript processing
 - **Sentiment Analysis**: Advanced emotion and sentiment detection
 - **Conversational Memory**: Context-aware memory for empathetic AI responses
-- **Supabase Integration**: Seamless integration with your existing transcript storage
+- **PostgreSQL Integration**: Seamless integration with PostgreSQL/Neon DB for transcript storage
 - **Background Processing**: Async task processing with Celery and Redis
 - **RESTful API**: Complete API for mobile app integration
 
@@ -37,10 +37,8 @@ pip install -r requirements.txt
 Copy `env_example.txt` to `.env` and configure:
 
 ```bash
-# Supabase Configuration (Required)
-SUPABASE_URL=your_supabase_url_here
-SUPABASE_KEY=your_supabase_anon_key_here
-SUPABASE_SERVICE_KEY=your_supabase_service_key_here
+# Neon DB Configuration (Required)
+DATABASE_URL=your_neon_db_connection_string_here
 
 # OpenAI Configuration (Required)
 OPENAI_API_KEY=your_openai_api_key_here
@@ -49,18 +47,18 @@ OPENAI_API_KEY=your_openai_api_key_here
 REDIS_URL=redis://localhost:6379/0
 ```
 
-> **Note**: Database tables are automatically managed by Supabase - no local database setup required!
+> **Note**: Database tables are automatically created on startup - no additional database setup required!
 
 ### 3. Start the Backend
 
 ```bash
-python app.py
+python api_docs_app.py
 ```
 
-### 4. Test the API
+### 4. Test the Memory System
 
 ```bash
-python test_api.py
+python test_memory_service.py
 ```
 
 ## 📡 API Endpoints
@@ -70,7 +68,7 @@ python test_api.py
 #### AI Chat Response
 
 ```http
-POST /api/chat
+POST /chat
 ```
 
 ```json
@@ -105,7 +103,7 @@ Response:
 #### Process Single Session
 
 ```http
-POST /api/sessions/process
+POST /sessions/process
 ```
 
 ```json
@@ -125,7 +123,7 @@ POST /api/sessions/process
 #### Batch Process Sessions
 
 ```http
-POST /api/sessions/batch-process
+POST /sessions/batch-process
 ```
 
 ```json
@@ -140,7 +138,7 @@ POST /api/sessions/batch-process
 #### Get Complete Personality Profile
 
 ```http
-GET /api/personality/{user_id}
+GET /personality/{user_id}
 ```
 
 Response includes:
@@ -153,13 +151,13 @@ Response includes:
 #### Get MBTI Type Only
 
 ```http
-GET /api/personality/{user_id}/type
+GET /personality/{user_id}/type
 ```
 
 #### Get Personality Facets
 
 ```http
-GET /api/personality/{user_id}/facets
+GET /personality/{user_id}/facets
 ```
 
 ### Conversational Memory
@@ -167,7 +165,7 @@ GET /api/personality/{user_id}/facets
 #### Get Recent Memory Context
 
 ```http
-GET /api/memory/{user_id}/recent?hours=72
+GET /memory/recent/{user_id}?limit=10
 ```
 
 Returns recent session summaries and personality insights for contextual AI responses.
@@ -177,7 +175,7 @@ Returns recent session summaries and personality insights for contextual AI resp
 #### Generate Summary
 
 ```http
-POST /api/analytics/summary
+POST /analytics/summary
 ```
 
 ```json
@@ -186,12 +184,44 @@ POST /api/analytics/summary
 }
 ```
 
+### AI Buddy Management
+
+#### Get Available AI Buddies
+
+```http
+GET /ai-buddies
+```
+
+#### Get Specific AI Buddy Details
+
+```http
+GET /ai-buddies/{buddy_id}
+```
+
+#### Select Preferred AI Buddy
+
+```http
+POST /users/{user_id}/select-buddy
+```
+
+```json
+{
+  "buddy_id": "oliver"
+}
+```
+
+#### Get User's Selected Buddy
+
+```http
+GET /users/{user_id}/selected-buddy
+```
+
 ### User Management
 
 #### Reset Personality Data
 
 ```http
-POST /api/users/{user_id}/reset
+POST /users/{user_id}/reset
 ```
 
 ## 🧮 Personality Analysis
@@ -239,7 +269,7 @@ Each conversation is analyzed for personality indicators:
 
 ## 🗃️ Database Schema
 
-> **Managed by Supabase** - These tables are automatically created and managed in your Supabase project.
+> **Managed by PostgreSQL/Neon DB** - These tables are automatically created and managed on startup.
 
 ### Users Table
 
@@ -323,10 +353,10 @@ const getPersonalityInsights = async (userId) => {
 
 ## 🔒 Security & Privacy
 
-- **Supabase Security**: Personality data secured by Supabase Row Level Security (RLS)
+- **PostgreSQL Security**: Personality data secured by proper database constraints and foreign keys
 - **API Keys**: Secure environment variable configuration
 - **Data Reset**: Built-in user data reset functionality
-- **Privacy-First**: No PII logging, secure cloud storage with Supabase
+- **Privacy-First**: No PII logging, secure cloud storage with Neon DB
 - **Encrypted Transit**: All API communication over HTTPS
 
 ## 🔧 Configuration
@@ -382,7 +412,7 @@ Input conversation about planning and decision-making:
 ### Common Issues
 
 1. **OpenAI API Errors**: Check API key and billing status
-2. **Supabase Connection**: Verify URL and keys in your `.env` file
+2. **Database Connection**: Verify DATABASE_URL in your `.env` file
 3. **Chat Endpoint**: Ensure OpenAI API key is configured for `/api/chat`
 4. **Memory Issues**: Large transcripts may need chunking
 

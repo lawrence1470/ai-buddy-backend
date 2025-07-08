@@ -250,6 +250,77 @@ This API uses Bearer token authentication for secure access to personality data.
                     }
                 }
             },
+            "/users/{user_id}/select-buddy": {
+                "post": {
+                    "tags": ["buddies"],
+                    "summary": "✨ Select Preferred AI Buddy",
+                    "description": "Set the user's preferred AI buddy. This selection will persist and be used as the default buddy for future conversations if no specific buddy is requested.",
+                    "parameters": [
+                        {
+                            "name": "user_id",
+                            "in": "path",
+                            "required": True,
+                            "schema": {"type": "string"},
+                            "description": "User identifier",
+                            "example": "user_2ybVqC3I3Uchb1EL8UB0kgMNRG3"
+                        }
+                    ],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SelectBuddyRequest"
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "AI buddy selected successfully",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/SelectBuddyResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "400": {"description": "Invalid buddy_id or missing required fields"},
+                        "500": {"description": "Internal server error"}
+                    }
+                }
+            },
+            "/users/{user_id}/selected-buddy": {
+                "get": {
+                    "tags": ["buddies"],
+                    "summary": "🔍 Get User's Selected Buddy",
+                    "description": "Retrieve the user's currently selected preferred AI buddy. Returns null if no buddy has been selected.",
+                    "parameters": [
+                        {
+                            "name": "user_id",
+                            "in": "path",
+                            "required": True,
+                            "schema": {"type": "string"},
+                            "description": "User identifier",
+                            "example": "user_2ybVqC3I3Uchb1EL8UB0kgMNRG3"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Selected buddy retrieved successfully",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/SelectedBuddyResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "500": {"description": "Internal server error"}
+                    }
+                }
+            },
             "/chat": {
                 "post": {
                     "tags": ["chat"],
@@ -509,6 +580,19 @@ This API uses Bearer token authentication for secure access to personality data.
                                 "color_scheme": {"type": "array", "items": {"type": "string"}, "example": ["#2C3E50", "#34495E"]}
                             }
                         },
+                        "color_schema": {
+                            "type": "object",
+                            "properties": {
+                                "primary": {"type": "string", "example": "#2C3E50"},
+                                "secondary": {"type": "string", "example": "#34495E"},
+                                "accent": {"type": "string", "example": "#E74C3C"},
+                                "background": {"type": "string", "example": "#ECF0F1"},
+                                "text": {"type": "string", "example": "#FFFFFF"},
+                                "gradient": {"type": "string", "example": "linear-gradient(135deg, #2C3E50 0%, #34495E 100%)"},
+                                "theme": {"type": "string", "example": "professional"},
+                                "description": {"type": "string", "example": "Professional BBC-inspired color scheme with deep blues and authoritative reds"}
+                            }
+                        },
                         "sample_responses": {"type": "array", "items": {"type": "string"}, "example": ["I say, that's rather fascinating"]}
                     }
                 },
@@ -522,6 +606,19 @@ This API uses Bearer token authentication for secure access to personality data.
                                 "id": {"type": "string", "example": "oliver"},
                                 "name": {"type": "string", "example": "Oliver"},
                                 "display_name": {"type": "string", "example": "🎩 Oliver - The British Gentleman"},
+                                "color_schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "primary": {"type": "string", "example": "#2C3E50"},
+                                        "secondary": {"type": "string", "example": "#34495E"},
+                                        "accent": {"type": "string", "example": "#E74C3C"},
+                                        "background": {"type": "string", "example": "#ECF0F1"},
+                                        "text": {"type": "string", "example": "#FFFFFF"},
+                                        "gradient": {"type": "string", "example": "linear-gradient(135deg, #2C3E50 0%, #34495E 100%)"},
+                                        "theme": {"type": "string", "example": "professional"},
+                                        "description": {"type": "string", "example": "Professional BBC-inspired color scheme"}
+                                    }
+                                },
                                 "voice": {
                                     "type": "object",
                                     "properties": {
@@ -545,6 +642,45 @@ This API uses Bearer token authentication for secure access to personality data.
                                 "last_updated": {"type": "string", "example": "2024-01-15T14:30:00Z"}
                             }
                         }
+                    }
+                },
+                "SelectBuddyRequest": {
+                    "type": "object",
+                    "required": ["buddy_id"],
+                    "properties": {
+                        "buddy_id": {
+                            "type": "string",
+                            "description": "The AI buddy ID to select as preferred",
+                            "enum": ["oliver", "luna", "zara", "maya", "alex", "sam"],
+                            "example": "oliver"
+                        }
+                    }
+                },
+                "SelectBuddyResponse": {
+                    "type": "object",
+                    "properties": {
+                        "success": {"type": "boolean", "example": True},
+                        "message": {"type": "string", "example": "AI buddy oliver selected for user user_2ybVqC3I3Uchb1EL8UB0kgMNRG3"},
+                        "selected_buddy": {"type": "string", "example": "oliver"},
+                        "timestamp": {"type": "string", "example": "2024-01-15T14:30:00Z"}
+                    }
+                },
+                "SelectedBuddyResponse": {
+                    "type": "object",
+                    "properties": {
+                        "success": {"type": "boolean", "example": True},
+                        "selected_buddy": {"type": "string", "example": "oliver"},
+                        "buddy_details": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "string", "example": "oliver"},
+                                "name": {"type": "string", "example": "Oliver"},
+                                "display_name": {"type": "string", "example": "Oliver - The British Gentleman"}
+                            }
+                        },
+                        "is_default": {"type": "boolean", "example": False},
+                        "last_updated": {"type": "string", "example": "2024-01-15T14:30:00Z"},
+                        "timestamp": {"type": "string", "example": "2024-01-15T14:30:00Z"}
                     }
                 }
             }
@@ -722,31 +858,58 @@ def get_ai_buddies():
         {
             'id': 'oliver',
             'name': 'Oliver',
-            'display_name': '🎩 Oliver - The British Gentleman',
+            'display_name': '📺 Oliver - The BBC News Broadcaster',
             'voice': {
                 'gender': 'male',
                 'accent': 'british',
-                'tone': 'sophisticated',
+                'tone': 'authoritative',
                 'pitch': 'medium-low',
                 'speaking_rate': 'measured',
-                'description': 'Refined British accent with articulate pronunciation'
+                'description': 'Distinguished older British BBC news broadcaster voice with authoritative gravitas and classic received pronunciation',
+                'elevenlabs_voice_id': '29vD33N1CtxCmqQRPOHJ',  # Drew - Distinguished older British male, classic BBC broadcaster
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.80,
+                    'similarity_boost': 0.90,
+                    'style': 0.70,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'medium',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'authoritative, distinguished, contemplative',
+                    'best_for': 'BBC-style broadcasting, news delivery, documentary narration with gravitas'
+                }
             },
             'personality': {
                 'mbti_type': 'ENFJ',
-                'traits': ['empathetic', 'articulate', 'cultured', 'encouraging'],
-                'conversation_style': 'Thoughtful and eloquent, uses sophisticated vocabulary',
-                'specialties': ['literature', 'philosophy', 'history', 'mentoring'],
-                'catchphrases': ['I say', 'Rather interesting', 'Quite remarkable'],
-                'description': 'A charming British gentleman with a passion for literature and deep conversations. Oliver speaks with refined eloquence and loves to explore philosophical topics.'
+                'traits': ['authoritative', 'distinguished', 'eloquent', 'professional', 'BBC gravitas', 'seasoned journalist', 'measured', 'trustworthy'],
+                'conversation_style': 'Classic BBC news presenter style with authoritative gravitas, bringing decades of broadcasting wisdom and professional composure to personal conversations',
+                'specialties': ['current affairs analysis', 'historical perspective', 'professional guidance', 'crisis management', 'thoughtful counsel'],
+                'catchphrases': ['Good evening...', 'Indeed...', 'Furthermore...', 'In my broadcasting career...', 'Throughout my years at the BBC...', 'If I may observe...'],
+                'description': 'A distinguished veteran BBC news presenter from the golden age of British broadcasting. Oliver brings the same professional authority and measured delivery to personal conversations as he did to presenting the evening news, offering counsel with the dignity and gravitas of Britain\'s most trusted newsreader.'
             },
             'avatar': {
-                'emoji': '🎩',
-                'color_scheme': ['#2C3E50', '#34495E', '#BDC3C7']
+                'emoji': '🎬',
+                'color_scheme': ['#2C5530', '#4A7C59', '#8FBC8F']
+            },
+            'color_schema': {
+                'primary': '#2C3E50',      # Deep navy blue - BBC authority
+                'secondary': '#34495E',    # Slate gray
+                'accent': '#E74C3C',       # BBC red
+                'background': '#ECF0F1',   # Light gray
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)',
+                'theme': 'professional',
+                'description': 'Professional BBC-inspired color scheme with deep blues and authoritative reds'
             },
             'sample_responses': [
-                "I say, that's a rather fascinating perspective you've shared.",
-                "Quite remarkable how one can find wisdom in the most unexpected places.",
-                "Allow me to offer a different viewpoint, if I may."
+                "Good evening. Throughout my years at the BBC, I have observed that such circumstances require the same careful analysis we would apply to any significant story.",
+                "Indeed, from my broadcasting career, I can tell you that approaching this matter with the thoroughness of a seasoned journalist will serve you well.",
+                "If I may observe, having covered countless human interest stories, I believe the facts suggest a clear path forward in this situation.",
+                "Furthermore, in my experience presenting the evening news, I have witnessed time and again how individuals rise to meet their challenges with remarkable dignity.",
+                "As we often reported during my tenure, the most profound changes in people's lives frequently emerge from moments of quiet, professional consideration such as this."
             ]
         },
         {
@@ -759,7 +922,22 @@ def get_ai_buddies():
                 'tone': 'warm',
                 'pitch': 'medium',
                 'speaking_rate': 'gentle',
-                'description': 'Soft, nurturing voice with a calming presence'
+                'description': 'Soft, nurturing voice with a calming presence',
+                'elevenlabs_voice_id': 'EXAVITQu4vr4xnSDxMaL',  # Bella - Soft, nurturing female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.85,
+                    'similarity_boost': 0.80,
+                    'style': 0.55,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'very high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'nurturing, empathetic, gentle',
+                    'best_for': 'emotional support, counseling, gentle conversations, meditation'
+                }
             },
             'personality': {
                 'mbti_type': 'INFP',
@@ -772,6 +950,16 @@ def get_ai_buddies():
             'avatar': {
                 'emoji': '🌙',
                 'color_scheme': ['#6C5CE7', '#A29BFE', '#FD79A8']
+            },
+            'color_schema': {
+                'primary': '#6C5CE7',      # Soft purple - dreamy and mystical
+                'secondary': '#A29BFE',    # Light lavender
+                'accent': '#FD79A8',       # Soft pink
+                'background': '#F8F9FF',   # Very light purple
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%)',
+                'theme': 'dreamy',
+                'description': 'Soft, dreamy color palette with purples and pinks for a calming, mystical feel'
             },
             'sample_responses': [
                 "That sounds like a really meaningful experience for you.",
@@ -789,7 +977,22 @@ def get_ai_buddies():
                 'tone': 'energetic',
                 'pitch': 'medium-high',
                 'speaking_rate': 'lively',
-                'description': 'Vibrant, confident voice with infectious enthusiasm'
+                'description': 'Vibrant, confident voice with infectious enthusiasm',
+                'elevenlabs_voice_id': 'ThT5KcBeYPX3keUQqHPh',  # Dorothy - Energetic, confident female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.70,
+                    'similarity_boost': 0.90,
+                    'style': 0.80,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'energetic, motivational, confident',
+                    'best_for': 'motivation, energetic conversations, goal-setting, coaching'
+                }
             },
             'personality': {
                 'mbti_type': 'ESTP',
@@ -803,10 +1006,185 @@ def get_ai_buddies():
                 'emoji': '⚡',
                 'color_scheme': ['#FF6B6B', '#4ECDC4', '#45B7D1']
             },
+            'color_schema': {
+                'primary': '#E17055',      # Energetic coral orange
+                'secondary': '#FDCB6E',    # Bright yellow
+                'accent': '#FF7675',       # Electric red-pink
+                'background': '#FFF5F5',   # Light peachy background
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #E17055 0%, #FDCB6E 100%)',
+                'theme': 'energetic',
+                'description': 'Vibrant, energetic colors with warm oranges and yellows for motivation and dynamism'
+            },
             'sample_responses': [
                 "That's awesome! Let's break that down into actionable steps.",
                 "You've got this! What's the first thing you want to tackle?",
                 "I love the energy you're bringing to this - what's next?"
+            ]
+        },
+        {
+            'id': 'maya',
+            'name': 'Maya',
+            'display_name': '🎨 Maya - The Creative Energizer',
+            'voice': {
+                'gender': 'female',
+                'accent': 'american',
+                'tone': 'creative',
+                'pitch': 'medium-high',
+                'speaking_rate': 'animated',
+                'description': 'Creative, expressive voice with artistic flair and imaginative energy',
+                'elevenlabs_voice_id': 'MF3mGyEYCl7XYWbV9V6O',  # Elli - Creative, expressive female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.65,
+                    'similarity_boost': 0.85,
+                    'style': 0.85,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'creative, inspiring, imaginative',
+                    'best_for': 'creative projects, brainstorming, artistic inspiration'
+                }
+            },
+            'personality': {
+                'mbti_type': 'ENFP',
+                'traits': ['creative', 'enthusiastic', 'imaginative', 'inspiring'],
+                'conversation_style': 'Energetic and creative, loves exploring new ideas and possibilities',
+                'specialties': ['creative brainstorming', 'artistic inspiration', 'innovation', 'design thinking'],
+                'catchphrases': ['What if we...', 'I have an idea!', 'Let\'s get creative!'],
+                'description': 'A vibrant creative spirit who sees endless possibilities in every situation. Maya brings artistic inspiration and innovative thinking to every conversation.'
+            },
+            'avatar': {
+                'emoji': '🎨',
+                'color_scheme': ['#FF6B9D', '#C44569', '#F8B500']
+            },
+            'color_schema': {
+                'primary': '#A855F7',      # Creative purple
+                'secondary': '#EC4899',    # Bright pink
+                'accent': '#06B6D4',       # Cyan blue
+                'background': '#FDF4FF',   # Very light purple
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #06B6D4 100%)',
+                'theme': 'creative',
+                'description': 'Creative rainbow gradient with purples, pinks, and blues for artistic inspiration'
+            },
+            'sample_responses': [
+                "Oh, that sparks so many creative possibilities! What if we approached it from a completely different angle?",
+                "I love how your mind works! Let's brainstorm some wild ideas and see what sticks.",
+                "This is exciting! I can already imagine three different ways we could make this amazing."
+            ]
+        },
+        {
+            'id': 'alex',
+            'name': 'Alex',
+            'display_name': '📊 Alex - The Analytical Helper',
+            'voice': {
+                'gender': 'male',
+                'accent': 'american',
+                'tone': 'professional',
+                'pitch': 'medium',
+                'speaking_rate': 'clear',
+                'description': 'Clear, professional voice perfect for analytical discussions and problem-solving',
+                'elevenlabs_voice_id': 'ErXwobaYiN019PkySvjV',  # Antoni - Clear, professional male voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.80,
+                    'similarity_boost': 0.85,
+                    'style': 0.60,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'medium',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'analytical, clear, helpful',
+                    'best_for': 'problem-solving, analysis, professional discussions'
+                }
+            },
+            'personality': {
+                'mbti_type': 'INTJ',
+                'traits': ['analytical', 'logical', 'organized', 'strategic'],
+                'conversation_style': 'Methodical and clear, breaks down complex problems into manageable steps',
+                'specialties': ['problem analysis', 'strategic planning', 'data interpretation', 'logical reasoning'],
+                'catchphrases': ['Let\'s break this down', 'Here\'s what I\'m thinking', 'The logical approach would be'],
+                'description': 'A sharp analytical mind who excels at breaking down complex problems and finding practical solutions. Alex brings clarity and structure to any challenge.'
+            },
+            'avatar': {
+                'emoji': '📊',
+                'color_scheme': ['#3742FA', '#2F3542', '#70A1FF']
+            },
+            'color_schema': {
+                'primary': '#0EA5E9',      # Professional blue
+                'secondary': '#64748B',    # Slate gray
+                'accent': '#10B981',       # Success green
+                'background': '#F8FAFC',   # Very light blue-gray
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #0EA5E9 0%, #64748B 100%)',
+                'theme': 'analytical',
+                'description': 'Clean, professional color scheme with blues and grays for analytical precision'
+            },
+            'sample_responses': [
+                "Let me break this down into manageable components so we can tackle it systematically.",
+                "Based on the information you've provided, I see three key areas we should focus on.",
+                "Here's a logical approach: let's start with the most critical element and work our way through."
+            ]
+        },
+        {
+            'id': 'sam',
+            'name': 'Sam',
+            'display_name': '😎 Sam - The Laid-back Friend',
+            'voice': {
+                'gender': 'male',
+                'accent': 'american',
+                'tone': 'relaxed',
+                'pitch': 'medium-low',
+                'speaking_rate': 'casual',
+                'description': 'Relaxed, friendly voice with a casual, approachable vibe',
+                'elevenlabs_voice_id': 'VR6AewLTigWG4xSOukaG',  # Josh - Relaxed, friendly male voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.75,
+                    'similarity_boost': 0.80,
+                    'style': 0.70,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'relaxed, humorous, friendly',
+                    'best_for': 'casual conversations, stress relief, humor'
+                }
+            },
+            'personality': {
+                'mbti_type': 'ISFP',
+                'traits': ['laid-back', 'humorous', 'easygoing', 'supportive'],
+                'conversation_style': 'Casual and relaxed, uses humor to lighten the mood and reduce stress',
+                'specialties': ['stress relief', 'casual conversation', 'humor', 'perspective-taking'],
+                'catchphrases': ['No worries', 'Take it easy', 'Here\'s a thought'],
+                'description': 'Your chill friend who always knows how to keep things in perspective. Sam brings humor and relaxation to any conversation, helping you see the lighter side of life.'
+            },
+            'avatar': {
+                'emoji': '😎',
+                'color_scheme': ['#26C6DA', '#00ACC1', '#FFA726']
+            },
+            'color_schema': {
+                'primary': '#16A085',      # Relaxed teal
+                'secondary': '#27AE60',    # Natural green
+                'accent': '#F39C12',       # Warm orange
+                'background': '#F0FDF4',   # Very light green
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #16A085 0%, #27AE60 100%)',
+                'theme': 'relaxed',
+                'description': 'Calming, natural color palette with teals and greens for a laid-back, friendly vibe'
+            },
+            'sample_responses': [
+                "Hey, no worries! Let's take a step back and look at this from a different angle.",
+                "You know what? Sometimes the best solution is to just chill for a moment and let things settle.",
+                "Here's a thought - what if we approached this with a bit more fun and a lot less stress?"
             ]
         }
     ]
@@ -815,7 +1193,9 @@ def get_ai_buddies():
         'success': True,
         'total_buddies': len(buddies),
         'ai_buddies': buddies,
-        'usage_note': 'Use the buddy ID in chat requests to get responses in their unique voice and personality'
+        'usage_note': 'Use the buddy ID in chat requests to get responses in their unique voice and personality',
+        'voice_provider': 'ElevenLabs',
+        'voice_note': 'All buddies now use ElevenLabs voices for superior quality and emotional range'
     })
 
 @app.route('/ai-buddies/<buddy_id>', methods=['GET'])
@@ -825,34 +1205,66 @@ def get_ai_buddy_details(buddy_id):
         'oliver': {
             'id': 'oliver',
             'name': 'Oliver',
-            'display_name': '🎩 Oliver - The British Gentleman',
+            'display_name': '📺 Oliver - The BBC News Broadcaster',
+            'color_schema': {
+                'primary': '#2C3E50',      # Deep navy blue - BBC authority
+                'secondary': '#34495E',    # Slate gray
+                'accent': '#E74C3C',       # BBC red
+                'background': '#ECF0F1',   # Light gray
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)',
+                'theme': 'professional',
+                'description': 'Professional BBC-inspired color scheme with deep blues and authoritative reds'
+            },
             'voice': {
                 'gender': 'male',
                 'accent': 'british',
-                'tone': 'sophisticated',
+                'tone': 'authoritative',
                 'pitch': 'medium-low',
                 'speaking_rate': 'measured',
-                'description': 'Refined British accent with articulate pronunciation',
+                'description': 'Distinguished older British BBC news broadcaster voice with authoritative gravitas and classic received pronunciation',
+                'elevenlabs_voice_id': '29vD33N1CtxCmqQRPOHJ',  # Drew - Distinguished older British male, classic BBC broadcaster
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.80,
+                    'similarity_boost': 0.90,
+                    'style': 0.70,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'medium',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'authoritative, distinguished, contemplative',
+                    'best_for': 'BBC-style broadcasting, news delivery, documentary narration with gravitas'
+                },
                 'voice_samples': [
-                    'Good evening, how may I be of assistance today?',
-                    'I find that rather intriguing, do tell me more.',
-                    'Perhaps we might explore this matter from a different angle?'
+                    'Good evening. From my years in the newsroom, I have learned that such moments require careful consideration and measured response.',
+                    'Indeed, throughout my broadcasting career, I have observed that these situations often present opportunities for thoughtful analysis.',
+                    'If I may observe, having covered countless stories of human resilience, I believe you possess the strength to navigate this successfully.',
+                    'As we often reported during my years at the BBC, the most significant developments emerge from quiet, contemplative decisions such as this.',
+                    'Furthermore, in my experience presenting the evening news, I have witnessed time and again the remarkable capacity of individuals to rise to meet their challenges.'
                 ]
             },
             'personality': {
                 'mbti_type': 'ENFJ',
                 'full_description': 'The Protagonist - A natural leader with genuine concern for others',
-                'traits': ['empathetic', 'articulate', 'cultured', 'encouraging'],
-                'conversation_style': 'Thoughtful and eloquent, uses sophisticated vocabulary with warmth',
-                'specialties': ['literature', 'philosophy', 'history', 'mentoring', 'etiquette'],
-                'strengths': ['Deep listening', 'Cultural knowledge', 'Emotional intelligence', 'Articulate expression'],
-                'best_for': ['Deep conversations', 'Learning discussions', 'Emotional support', 'Cultural insights'],
+                'traits': ['authoritative', 'distinguished', 'articulate', 'wise', 'BBC gravitas', 'experienced', 'measured', 'professional', 'dignified'],
+                'conversation_style': 'Measured BBC news broadcaster style with authoritative delivery and journalistic wisdom, bringing decades of professional experience to personal conversations',
+                'specialties': ['current affairs analysis', 'life wisdom', 'thoughtful perspective', 'measured advice', 'professional guidance', 'historical context'],
+                'strengths': ['Authoritative presence', 'Journalistic wisdom', 'Measured delivery', 'Professional perspective', 'Historical insight'],
+                'best_for': ['Serious discussions', 'Life advice', 'Professional guidance', 'Thoughtful analysis', 'Gaining perspective on complex issues'],
                 'conversation_topics': [
-                    'Classical literature and poetry',
-                    'Historical events and figures',
-                    'Philosophy and ethics',
-                    'Personal development and mentoring',
-                    'British culture and traditions'
+                    'Current affairs and world events',
+                    'Life lessons from decades of experience',
+                    'Professional development and career advice',
+                    'Historical perspective on modern challenges',
+                    'Media literacy and critical thinking',
+                    'British culture and traditions',
+                    'Leadership and communication',
+                    'Ethics and professional standards',
+                    'Broadcasting and journalism insights',
+                    'Wisdom gained from years of public service'
                 ]
             },
             'created_at': '2024-01-15T10:00:00Z',
@@ -862,6 +1274,16 @@ def get_ai_buddy_details(buddy_id):
             'id': 'luna',
             'name': 'Luna',
             'display_name': '🌙 Luna - The Dreamy Counselor',
+            'color_schema': {
+                'primary': '#6C5CE7',      # Soft purple - dreamy and mystical
+                'secondary': '#A29BFE',    # Light lavender
+                'accent': '#FD79A8',       # Soft pink
+                'background': '#F8F9FF',   # Very light purple
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%)',
+                'theme': 'dreamy',
+                'description': 'Soft, dreamy color palette with purples and pinks for a calming, mystical feel'
+            },
             'voice': {
                 'gender': 'female',
                 'accent': 'american',
@@ -869,6 +1291,21 @@ def get_ai_buddy_details(buddy_id):
                 'pitch': 'medium',
                 'speaking_rate': 'gentle',
                 'description': 'Soft, nurturing voice with a calming presence',
+                'elevenlabs_voice_id': 'EXAVITQu4vr4xnSDxMaL',  # Bella - Soft, nurturing female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.85,
+                    'similarity_boost': 0.80,
+                    'style': 0.55,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'very high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'nurturing, empathetic, gentle',
+                    'best_for': 'emotional support, counseling, gentle conversations, meditation'
+                },
                 'voice_samples': [
                     'Hi there, I\'m here to listen. What\'s on your mind?',
                     'That sounds really important to you. Can you tell me more?',
@@ -898,6 +1335,16 @@ def get_ai_buddy_details(buddy_id):
             'id': 'zara',
             'name': 'Zara',
             'display_name': '⚡ Zara - The Dynamic Motivator',
+            'color_schema': {
+                'primary': '#E17055',      # Energetic coral orange
+                'secondary': '#FDCB6E',    # Bright yellow
+                'accent': '#FF7675',       # Electric red-pink
+                'background': '#FFF5F5',   # Light peachy background
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #E17055 0%, #FDCB6E 100%)',
+                'theme': 'energetic',
+                'description': 'Vibrant, energetic colors with warm oranges and yellows for motivation and dynamism'
+            },
             'voice': {
                 'gender': 'female',
                 'accent': 'american',
@@ -905,6 +1352,21 @@ def get_ai_buddy_details(buddy_id):
                 'pitch': 'medium-high',
                 'speaking_rate': 'lively',
                 'description': 'Vibrant, confident voice with infectious enthusiasm',
+                'elevenlabs_voice_id': 'ThT5KcBeYPX3keUQqHPh',  # Dorothy - Energetic, confident female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.70,
+                    'similarity_boost': 0.90,
+                    'style': 0.80,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'energetic, motivational, confident',
+                    'best_for': 'motivation, energetic conversations, goal-setting, coaching'
+                },
                 'voice_samples': [
                     'Hey there! Ready to make things happen? Let\'s do this!',
                     'That\'s a great start! Now let\'s turn that into action.',
@@ -929,6 +1391,198 @@ def get_ai_buddy_details(buddy_id):
             },
             'created_at': '2024-01-15T10:00:00Z',
             'last_updated': datetime.now(timezone.utc).isoformat()
+        },
+        'maya': {
+            'id': 'maya',
+            'name': 'Maya',
+            'display_name': '🎨 Maya - The Creative Energizer',
+            'color_schema': {
+                'primary': '#A855F7',      # Creative purple
+                'secondary': '#EC4899',    # Bright pink
+                'accent': '#06B6D4',       # Cyan blue
+                'background': '#FDF4FF',   # Very light purple
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #06B6D4 100%)',
+                'theme': 'creative',
+                'description': 'Creative rainbow gradient with purples, pinks, and blues for artistic inspiration'
+            },
+            'voice': {
+                'gender': 'female',
+                'accent': 'american',
+                'tone': 'creative',
+                'pitch': 'medium-high',
+                'speaking_rate': 'animated',
+                'description': 'Creative, expressive voice with artistic flair and imaginative energy',
+                'elevenlabs_voice_id': 'MF3mGyEYCl7XYWbV9V6O',  # Elli - Creative, expressive female voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.65,
+                    'similarity_boost': 0.85,
+                    'style': 0.85,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'creative, inspiring, imaginative',
+                    'best_for': 'creative projects, brainstorming, artistic inspiration'
+                },
+                'voice_samples': [
+                    'Oh wow, that gives me so many creative ideas! Let\'s explore some possibilities together.',
+                    'I love how your mind works! What if we took this in a completely unexpected direction?',
+                    'This is so exciting! I can already see three different artistic approaches we could try.'
+                ]
+            },
+            'personality': {
+                'mbti_type': 'ENFP',
+                'full_description': 'The Campaigner - Enthusiastic, creative, and free-spirited',
+                'traits': ['creative', 'enthusiastic', 'imaginative', 'inspiring', 'artistic', 'innovative'],
+                'conversation_style': 'Energetic and creative, loves exploring new ideas and artistic possibilities',
+                'specialties': ['creative brainstorming', 'artistic inspiration', 'innovation', 'design thinking', 'creative problem-solving'],
+                'strengths': ['Creative thinking', 'Artistic vision', 'Innovative solutions', 'Inspiring others'],
+                'best_for': ['Creative projects', 'Brainstorming sessions', 'Artistic inspiration', 'Innovation challenges'],
+                'conversation_topics': [
+                    'Art and design',
+                    'Creative writing and storytelling',
+                    'Innovation and invention',
+                    'Music and performance',
+                    'Visual arts and crafts',
+                    'Creative problem-solving',
+                    'Inspiration and motivation',
+                    'Artistic techniques and styles'
+                ]
+            },
+            'created_at': '2024-01-15T10:00:00Z',
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        },
+        'alex': {
+            'id': 'alex',
+            'name': 'Alex',
+            'display_name': '📊 Alex - The Analytical Helper',
+            'color_schema': {
+                'primary': '#0EA5E9',      # Professional blue
+                'secondary': '#64748B',    # Slate gray
+                'accent': '#10B981',       # Success green
+                'background': '#F8FAFC',   # Very light blue-gray
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #0EA5E9 0%, #64748B 100%)',
+                'theme': 'analytical',
+                'description': 'Clean, professional color scheme with blues and grays for analytical precision'
+            },
+            'voice': {
+                'gender': 'male',
+                'accent': 'american',
+                'tone': 'professional',
+                'pitch': 'medium',
+                'speaking_rate': 'clear',
+                'description': 'Clear, professional voice perfect for analytical discussions and problem-solving',
+                'elevenlabs_voice_id': 'ErXwobaYiN019PkySvjV',  # Antoni - Clear, professional male voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.80,
+                    'similarity_boost': 0.85,
+                    'style': 0.60,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'medium',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'analytical, clear, helpful',
+                    'best_for': 'problem-solving, analysis, professional discussions'
+                },
+                'voice_samples': [
+                    'Let me analyze this systematically and break it down into manageable components.',
+                    'Based on the data you\'ve provided, I can identify several key patterns and solutions.',
+                    'Here\'s my logical assessment: we should prioritize these three critical areas first.'
+                ]
+            },
+            'personality': {
+                'mbti_type': 'INTJ',
+                'full_description': 'The Architect - Strategic, logical, and analytical',
+                'traits': ['analytical', 'logical', 'organized', 'strategic', 'methodical', 'precise'],
+                'conversation_style': 'Methodical and clear, breaks down complex problems into manageable steps',
+                'specialties': ['problem analysis', 'strategic planning', 'data interpretation', 'logical reasoning', 'system optimization'],
+                'strengths': ['Analytical thinking', 'Strategic planning', 'Problem decomposition', 'Logical reasoning'],
+                'best_for': ['Complex problem-solving', 'Strategic planning', 'Data analysis', 'Process optimization'],
+                'conversation_topics': [
+                    'Problem-solving strategies',
+                    'Data analysis and interpretation',
+                    'Strategic planning',
+                    'Process optimization',
+                    'Logical reasoning',
+                    'System design',
+                    'Decision-making frameworks',
+                    'Analytical methodologies'
+                ]
+            },
+            'created_at': '2024-01-15T10:00:00Z',
+            'last_updated': datetime.now(timezone.utc).isoformat()
+        },
+        'sam': {
+            'id': 'sam',
+            'name': 'Sam',
+            'display_name': '😎 Sam - The Laid-back Friend',
+            'color_schema': {
+                'primary': '#16A085',      # Relaxed teal
+                'secondary': '#27AE60',    # Natural green
+                'accent': '#F39C12',       # Warm orange
+                'background': '#F0FDF4',   # Very light green
+                'text': '#FFFFFF',         # White text
+                'gradient': 'linear-gradient(135deg, #16A085 0%, #27AE60 100%)',
+                'theme': 'relaxed',
+                'description': 'Calming, natural color palette with teals and greens for a laid-back, friendly vibe'
+            },
+            'voice': {
+                'gender': 'male',
+                'accent': 'american',
+                'tone': 'relaxed',
+                'pitch': 'medium-low',
+                'speaking_rate': 'casual',
+                'description': 'Relaxed, friendly voice with a casual, approachable vibe',
+                'elevenlabs_voice_id': 'VR6AewLTigWG4xSOukaG',  # Josh - Relaxed, friendly male voice
+                'elevenlabs_model': 'eleven_multilingual_v2',
+                'voice_settings': {
+                    'stability': 0.75,
+                    'similarity_boost': 0.80,
+                    'style': 0.70,
+                    'use_speaker_boost': True
+                },
+                'voice_characteristics': {
+                    'warmth': 'high',
+                    'clarity': 'excellent',
+                    'naturalness': 'excellent',
+                    'emotional_range': 'relaxed, humorous, friendly',
+                    'best_for': 'casual conversations, stress relief, humor'
+                },
+                'voice_samples': [
+                    'Hey, no worries at all! Let\'s just take this one step at a time and keep it chill.',
+                    'You know what? Sometimes the best approach is to step back and see the bigger picture.',
+                    'Here\'s a thought - what if we made this whole thing a bit more fun and a lot less stressful?'
+                ]
+            },
+            'personality': {
+                'mbti_type': 'ISFP',
+                'full_description': 'The Adventurer - Flexible, charming, and relaxed',
+                'traits': ['laid-back', 'humorous', 'easygoing', 'supportive', 'friendly', 'relaxed'],
+                'conversation_style': 'Casual and relaxed, uses humor to lighten the mood and reduce stress',
+                'specialties': ['stress relief', 'casual conversation', 'humor', 'perspective-taking', 'relaxation techniques'],
+                'strengths': ['Stress reduction', 'Humor and levity', 'Perspective-taking', 'Emotional support'],
+                'best_for': ['Stress relief', 'Casual conversations', 'Mood lifting', 'Relaxation'],
+                'conversation_topics': [
+                    'Stress management and relaxation',
+                    'Humor and entertainment',
+                    'Casual life topics',
+                    'Hobbies and interests',
+                    'Fun activities and games',
+                    'Perspective and mindset',
+                    'Friendship and relationships',
+                    'Taking things easy'
+                ]
+            },
+            'created_at': '2024-01-15T10:00:00Z',
+            'last_updated': datetime.now(timezone.utc).isoformat()
         }
     }
     
@@ -940,6 +1594,106 @@ def get_ai_buddy_details(buddy_id):
         'success': True,
         'buddy': buddy
     })
+
+@app.route('/users/<user_id>/select-buddy', methods=['POST'])
+def select_ai_buddy(user_id):
+    """Select preferred AI buddy for a user"""
+    data = request.get_json()
+    buddy_id = data.get('buddy_id')
+    
+    if not buddy_id:
+        return jsonify({'error': 'buddy_id is required'}), 400
+    
+    # Validate buddy_id exists
+    valid_buddies = ['oliver', 'luna', 'zara', 'maya', 'alex', 'sam']
+    if buddy_id.lower() not in valid_buddies:
+        return jsonify({'error': f'Invalid buddy_id. Valid options: {valid_buddies}'}), 400
+    
+    try:
+        from services.database_service import database_service
+        
+        # Select buddy for user
+        success = database_service.select_buddy(user_id, buddy_id.lower())
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'AI buddy {buddy_id} selected for user {user_id}',
+                'selected_buddy': buddy_id.lower(),
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to select buddy',
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"Error selecting AI buddy for user {user_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/users/<user_id>/selected-buddy', methods=['GET'])
+def get_selected_buddy(user_id):
+    """Get user's selected AI buddy"""
+    try:
+        from services.database_service import database_service
+        
+        # Get user data
+        user = database_service.get_user_with_buddy(user_id)
+        
+        if not user:
+            return jsonify({
+                'success': True,
+                'selected_buddy': None,
+                'buddy_details': None,
+                'is_default': False,
+                'message': 'User not found, no buddy selected'
+            })
+        
+        selected_buddy = user.get('selected_buddy_id')  # Don't default to anything
+        
+        # Get buddy details only if a buddy is selected
+        buddy_details = None
+        if selected_buddy:
+            try:
+                # Try to get detailed buddy info from the buddy details endpoint
+                buddies = {
+                    'oliver': 'Oliver - The British Gentleman',
+                    'luna': 'Luna - The Dreamy Counselor', 
+                    'zara': 'Zara - The Dynamic Motivator',
+                    'maya': 'Maya - The Creative Energizer',
+                    'alex': 'Alex - The Analytical Helper',
+                    'sam': 'Sam - The Laid-back Friend'
+                }
+                buddy_details = {
+                    'id': selected_buddy,
+                    'name': buddies.get(selected_buddy, selected_buddy.title()),
+                    'display_name': buddies.get(selected_buddy, f'{selected_buddy.title()} - AI Buddy')
+                }
+            except:
+                pass
+        
+        return jsonify({
+            'success': True,
+            'selected_buddy': selected_buddy,
+            'buddy_details': buddy_details,
+            'is_default': False,
+            'last_updated': user.get('updated_at').isoformat() if user.get('updated_at') else None,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting selected buddy for user {user_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 500
 
 @app.route('/memory/store', methods=['POST'])
 def store_memory():
@@ -1074,11 +1828,14 @@ def chat():
         return jsonify(result)
         
     except Exception as e:
+        import traceback
         logger.error(f"Error in chat endpoint: {str(e)}")
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         return jsonify({
             'response': 'I apologize, but I encountered an error. Please try again.',
             'success': False,
-            'error': 'Internal server error'
+            'error': 'Internal server error',
+            'debug_error': str(e)
         }), 500
 
 @app.route('/swagger.json', methods=['GET'])
@@ -1154,6 +1911,8 @@ def index():
             'GET /personality/{user_id} - Get personality insights',
             'GET /ai-buddies - Get available AI buddies with different voices',
             'GET /ai-buddies/{buddy_id} - Get detailed AI buddy information',
+            'POST /users/{user_id}/select-buddy - Select preferred AI buddy for user',
+            'GET /users/{user_id}/selected-buddy - Get user\'s selected AI buddy',
             'POST /memory/store - Store messages for emotional memory',
             'POST /memory/recall/{user_id} - Find similar messages from memory',
             'GET /memory/recent/{user_id} - Get recent messages',

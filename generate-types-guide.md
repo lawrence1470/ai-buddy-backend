@@ -16,7 +16,7 @@ yarn add -D openapi-typescript
 ```json
 {
   "scripts": {
-    "generate-types": "openapi-typescript http://localhost:8000/swagger.json --output ./src/types/api.ts",
+    "generate-types": "openapi-typescript http://localhost:8080/swagger.json --output ./src/types/api.ts",
     "generate-types:prod": "openapi-typescript https://your-api-domain.com/swagger.json --output ./src/types/api.ts"
   }
 }
@@ -25,7 +25,7 @@ yarn add -D openapi-typescript
 ### 3. Generate types
 
 ```bash
-# Make sure your API server is running on localhost:8000
+# Make sure your API server is running on localhost:8080
 npm run generate-types
 ```
 
@@ -57,7 +57,7 @@ export const usePersonalityApi = () => {
   const processSession = async (
     data: SessionRequest
   ): Promise<SessionProcessResult> => {
-    const response = await fetch("http://localhost:8000/sessions/process", {
+    const response = await fetch("http://localhost:8080/sessions/process", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export const usePersonalityApi = () => {
     userId: string
   ): Promise<PersonalityProfile> => {
     const response = await fetch(
-      `http://localhost:8000/personality/${userId}`,
+      `http://localhost:8080/personality/${userId}`,
       {
         headers: {
           Authorization: "Bearer your-token",
@@ -83,7 +83,7 @@ export const usePersonalityApi = () => {
   };
 
   const getHealth = async (): Promise<HealthStatus> => {
-    const response = await fetch("http://localhost:8000/health");
+    const response = await fetch("http://localhost:8080/health");
     return response.json();
   };
 

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple
 import logging
 from datetime import datetime, timezone
 
-from services.supabase_service import supabase_service
+from services.database_service import database_service
 from services.summary_service import summary_service
 from config import Config
 
@@ -13,7 +13,7 @@ class PersonalityService:
     def __init__(self):
         self.confidence_threshold = Config.MBTI_CONFIDENCE_THRESHOLD
         self.min_sessions = Config.MIN_SESSIONS_FOR_ANALYSIS
-        self.supabase = supabase_service
+        self.database = database_service
     
     async def update_personality_from_session(self, user_id: str, session_transcript: List[Dict], session_summary: str) -> Dict:
         """Update user's personality profile based on new session data"""
@@ -22,7 +22,7 @@ class PersonalityService:
             evidence = await summary_service.extract_personality_evidence(session_transcript, session_summary)
             
             # Get or create personality profile
-            profile = self.supabase.get_or_create_personality_profile(user_id)
+            profile = self.database.get_or_create_personality_profile(user_id)
             
             # Update scores using Bayesian inference
             updated_scores = self._bayesian_update(profile, evidence)
@@ -49,7 +49,7 @@ class PersonalityService:
             updated_profile['overall_confidence'] = self._calculate_overall_confidence(updated_profile)
             
             # Update profile in database
-            self.supabase.update_personality_profile(user_id, updated_profile)
+            self.database.update_personality_profile(user_id, updated_profile)
             
             # Calculate MBTI type
             mbti_type = self._calculate_mbti_type(updated_profile)
@@ -159,7 +159,7 @@ class PersonalityService:
     async def get_personality_insights(self, user_id: str) -> Optional[Dict]:
         """Get comprehensive personality insights for a user"""
         try:
-            profile = self.supabase.get_personality_profile(user_id)
+            profile = self.database.get_personality_profile(user_id)
             
             if not profile:
                 return None
