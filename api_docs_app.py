@@ -2,6 +2,15 @@ from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import logging
 from datetime import datetime, timezone
+import os
+
+from config import Config
+from services.chat_service import ChatService
+from services.personality_service import PersonalityService
+from services.summary_service import SummaryService
+from services.memory_service import MemoryService
+from services.clerk_auth_service import clerk_auth_service
+from services.auth_middleware import require_auth, optional_auth, get_current_user, extract_user_id
 from services.database_service import database_service
 
 # Configure logging
@@ -1917,6 +1926,320 @@ def index():
             'POST /chat - AI Chat Conversation (supports buddy_id for personality-specific responses)'
         ]
     })
+
+# ================================================================================================
+# AUTHENTICATION ENDPOINTS - SMS/Phone Authentication with Clerk
+# ================================================================================================
+
+@app.route('/auth/send-verification', methods=['POST'])
+def send_verification():
+    """
+    Send SMS verification code to phone number
+    
+    Request Body:
+    {
+        "phone_number": "+1234567890"
+    }
+    
+    Returns:
+    {
+        "success": true,
+        "verification_id": "verification_id_here",
+        "message": "Verification code sent via SMS"
+    }
+    """
+    try:
+        # Validate request
+        if not request.is_json:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_content_type',
+                'message': 'Content-Type must be application/json'
+            }), 400
+        
+        data = request.get_json()
+        phone_number = data.get('phone_number')
+        
+        if not phone_number:
+            return jsonify({
+                'success': False,
+                'error': 'missing_phone_number',
+                'message': 'Phone number is required'
+            }), 400
+        
+        # Basic phone number validation (E.164 format)
+        if not phone_number.startswith('+') or len(phone_number) < 10:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_phone_number',
+                'message': 'Phone number must be in E.164 format (e.g., +1234567890)'
+            }), 400
+        
+        # Send verification code
+        result = clerk_auth_service.create_phone_number_verification(phone_number)
+        
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+        
+    except Exception as e:
+        logger.error(f"Error sending verification: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to send verification code'
+        }), 500
+
+@app.route('/auth/verify-phone', methods=['POST'])
+def verify_phone():
+    """
+    Verify phone number with SMS code
+    
+    Request Body:
+    {
+        "verification_id": "verification_id_from_send_verification",
+        "code": "123456"
+    }
+    
+    Returns:
+    {
+        "success": true,
+        "verified": true,
+        "session_token": "session_token_here",
+        "user": {
+            "id": "user_id_here",
+            "phone_number": "+1234567890",
+            "first_name": "John",
+            "last_name": "Doe"
+        }
+    }
+    """
+    try:
+        # Validate request
+        if not request.is_json:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_content_type',
+                'message': 'Content-Type must be application/json'
+            }), 400
+        
+        data = request.get_json()
+        verification_id = data.get('verification_id')
+        code = data.get('code')
+        
+        if not verification_id or not code:
+            return jsonify({
+                'success': False,
+                'error': 'missing_parameters',
+                'message': 'verification_id and code are required'
+            }), 400
+        
+        # Verify phone number
+        verify_result = clerk_auth_service.verify_phone_number(verification_id, code)
+        
+        if not verify_result['success']:
+            return jsonify(verify_result), 400
+        
+        # Create user session after successful verification
+        session_result = clerk_auth_service.create_user_session(verify_result['phone_number'])
+        
+        if session_result['success']:
+            return jsonify({
+                'success': True,
+                'verified': True,
+                'session_token': session_result['session_token'],
+                'user': session_result['user'],
+                'message': 'Phone number verified and session created'
+            }), 200
+        else:
+            return jsonify(session_result), 400
+        
+    except Exception as e:
+        logger.error(f"Error verifying phone: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to verify phone number'
+        }), 500
+
+@app.route('/auth/user', methods=['GET'])
+@require_auth
+def get_user():
+    """
+    Get current authenticated user information
+    
+    Headers:
+    Authorization: Bearer <session_token>
+    
+    Returns:
+    {
+        "success": true,
+        "user": {
+            "id": "user_id_here",
+            "phone_number": "+1234567890",
+            "first_name": "John",
+            "last_name": "Doe",
+            "created_at": "2024-01-01T00:00:00Z",
+            "verified": true
+        }
+    }
+    """
+    try:
+        # Get user info from middleware
+        user_info = get_current_user()
+        
+        return jsonify({
+            'success': True,
+            'user': user_info
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting user: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to retrieve user information'
+        }), 500
+
+@app.route('/auth/logout', methods=['POST'])
+@require_auth
+def logout():
+    """
+    Logout (revoke session token)
+    
+    Headers:
+    Authorization: Bearer <session_token>
+    
+    Returns:
+    {
+        "success": true,
+        "message": "Logged out successfully"
+    }
+    """
+    try:
+        # Extract session token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        session_token = auth_header.split(' ')[1] if auth_header else None
+        
+        if session_token:
+            # Revoke session
+            result = clerk_auth_service.revoke_session(session_token)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': 'Logged out successfully'
+                }), 200
+            else:
+                return jsonify(result), 400
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'no_session',
+                'message': 'No session token provided'
+            }), 400
+        
+    except Exception as e:
+        logger.error(f"Error logging out: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to logout'
+        }), 500
+
+@app.route('/auth/status', methods=['GET'])
+@optional_auth
+def auth_status():
+    """
+    Check authentication status
+    
+    Headers:
+    Authorization: Bearer <session_token> (optional)
+    
+    Returns:
+    {
+        "success": true,
+        "authenticated": true,
+        "user": {
+            "id": "user_id_here",
+            "phone_number": "+1234567890"
+        }
+    }
+    """
+    try:
+        user_info = get_current_user()
+        
+        return jsonify({
+            'success': True,
+            'authenticated': user_info is not None,
+            'user': user_info
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error checking auth status: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to check authentication status'
+        }), 500
+
+# ================================================================================================
+# PROTECTED ENDPOINTS - Examples of using authentication
+# ================================================================================================
+
+@app.route('/protected/profile', methods=['GET'])
+@require_auth
+def get_profile():
+    """
+    Get user profile (protected endpoint example)
+    
+    Headers:
+    Authorization: Bearer <session_token>
+    
+    Returns:
+    {
+        "success": true,
+        "profile": {
+            "user_id": "user_id_here",
+            "phone_number": "+1234567890",
+            "created_at": "2024-01-01T00:00:00Z"
+        }
+    }
+    """
+    try:
+        user_info = get_current_user()
+        
+        if not user_info:
+            return jsonify({
+                'success': False,
+                'error': 'not_authenticated',
+                'message': 'User not authenticated'
+            }), 401
+        
+        return jsonify({
+            'success': True,
+            'profile': {
+                'user_id': user_info['user_id'],
+                'phone_number': user_info['phone_number'],
+                'first_name': user_info['first_name'],
+                'last_name': user_info['last_name'],
+                'created_at': user_info['created_at'],
+                'verified': user_info['verified']
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting profile: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'internal_error',
+            'message': 'Failed to retrieve profile'
+        }), 500
+
+# ================================================================================================
+# MAIN APPLICATION ENTRY POINT
+# ================================================================================================
 
 if __name__ == '__main__':
     logger.info("🚀 Starting AI Personality Backend with Dark Mode Documentation...")
