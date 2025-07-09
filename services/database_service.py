@@ -1,5 +1,5 @@
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 from typing import List, Dict, Optional, Any
 import logging
 from datetime import datetime, timezone
@@ -20,7 +20,7 @@ class DatabaseService:
     
     def _get_connection(self):
         """Get database connection"""
-        return psycopg2.connect(self.connection_string)
+        return psycopg.connect(self.connection_string)
     
     def _ensure_tables(self):
         """Create tables if they don't exist"""
@@ -85,7 +85,7 @@ class DatabaseService:
         """Get existing user or create new one"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     # First try to get existing user
                     cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
                     user = cur.fetchone()
@@ -164,7 +164,7 @@ class DatabaseService:
         """Retrieve session data including summaries"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("SELECT * FROM sessions WHERE id = %s", (session_id,))
                     session = cur.fetchone()
                     
@@ -191,7 +191,7 @@ class DatabaseService:
         """Get recent sessions for a user with summaries"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("""
                         SELECT * FROM sessions 
                         WHERE user_id = %s 
@@ -224,7 +224,7 @@ class DatabaseService:
         """Get existing personality profile or create new one"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     # Ensure user exists
                     self.get_or_create_user(user_id)
                     
@@ -300,7 +300,7 @@ class DatabaseService:
         """Get personality profile for a user"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("SELECT * FROM personality_profiles WHERE user_id = %s", (user_id,))
                     profile = cur.fetchone()
                     
@@ -329,7 +329,7 @@ class DatabaseService:
             cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
             
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("""
                         SELECT * FROM sessions 
                         WHERE user_id = %s AND created_at >= %s 
@@ -388,7 +388,7 @@ class DatabaseService:
         """Get user's selected AI buddy"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("SELECT selected_buddy_id FROM users WHERE id = %s", (user_id,))
                     result = cur.fetchone()
                     
@@ -404,7 +404,7 @@ class DatabaseService:
         """Get user data including selected buddy"""
         try:
             with self._get_connection() as conn:
-                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                with conn.cursor(row_factory=dict_row) as cur:
                     cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
                     user = cur.fetchone()
                     
