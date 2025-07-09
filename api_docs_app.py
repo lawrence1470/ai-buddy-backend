@@ -1671,12 +1671,15 @@ def get_selected_buddy(user_id):
             except:
                 pass
         
+        updated_at = user.get('updated_at')
+        last_updated = updated_at.isoformat() if updated_at else None
+        
         return jsonify({
             'success': True,
             'selected_buddy': selected_buddy,
             'buddy_details': buddy_details,
             'is_default': False,
-            'last_updated': user.get('updated_at').isoformat() if user.get('updated_at') else None,
+            'last_updated': last_updated,
             'timestamp': datetime.now(timezone.utc).isoformat()
         })
         
